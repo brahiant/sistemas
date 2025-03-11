@@ -1,32 +1,51 @@
 <?php
 
+// Requerimos el modelo de Empleado para acceder a sus métodos
 require_once "../models/EmpleadoModel.php";
 
+// Obtenemos la opción pasada por GET
 $option = $_GET['op'];
+// Creamos un objeto de EmpleadoModel para interactuar con el modelo
 $objetoEmpleado = new EmpleadoModel();
 
 
+// Verificamos si la opción es "listregistrados"
 if ($option == "listregistrados") {
+   // Inicializamos el arreglo de respuesta con status false y data vacía
    $arrResponse = array('status' => false, 'data' => "");
+   // Obtenemos los empleados del modelo
    $arrEmpleado = $objetoEmpleado->getEmpleados();
+   // Verificamos si el arreglo de empleados no está vacío
    if (!empty($arrEmpleado)) {
+      // Iteramos sobre el arreglo de empleados para agregar opciones de edición y eliminación
       for ($i = 0; $i < count($arrEmpleado); $i++) {
+         // Obtenemos el ID del empleado
          $id_empleados = $arrEmpleado[$i]->id_empleados; // Corrected assignment
+         // Creamos las opciones de edición y eliminación
          $options = '<a href="' . BASE_URL . 'views/empleado/editar-empleado.php?p=' . $id_empleados . '" class="btn btn-outline-primary btn-sm" title="Modificar Registro"><i class="fa-solid fa-user-pen"></i></a>
           <button onclick="fntDelEmpleado(' . $id_empleados . ')" class="btn btn-outline-danger btn-sm" title="Eliminar Registro"><i class="fa-solid fa-user-minus"></i></button>';
+         // Asignamos las opciones al arreglo de empleados
          $arrEmpleado[$i]->options = $options;
       }
+      // Cambiamos el status a true y asignamos los datos
       $arrResponse['status'] = true;
       $arrResponse['data'] = $arrEmpleado;
    }
+   // Convertimos el arreglo de respuesta a JSON y lo imprimimos
    echo json_encode($arrResponse);
+   // Finalizamos el script para evitar ejecución adicional
    die();
 }
+// Verificamos si la opción es "registro"
 if ($option == "registro") {
+   // Verificamos si se está enviando un formulario
    if ($_POST) {
+      // Verificamos si todos los campos obligatorios están completos
       if (empty($_POST['txtNombreCompleto']) || empty($_POST['txtnumdoc']) || empty($_POST['txtDireccion']) || empty($_POST['txtTelefono']) || empty($_POST['txtEmail']) || empty($_POST['listCiudad'])) {
+         // Si algún campo está vacío, enviamos una respuesta de error
          $arrResponse = array('status' => false, 'msg' => 'Error: datos incompletos');
       } else {
+         // Procesamos los datos del formulario
          $strNombre = ucwords(trim($_POST['txtNombreCompleto']));
          $strNumDoc = trim($_POST['txtnumdoc']);
          $strDireccion = ucwords(trim($_POST['txtDireccion']));
@@ -35,6 +54,7 @@ if ($option == "registro") {
          $id_ciudad = intval($_POST['listCiudad']);
          $id_estado_civil = intval($_POST['listEstadoCivil']);
          $id_tipo_doc = intval($_POST['listTipoDoc']);
+         // Intentamos insertar el empleado
          $arrEmpleado = $objetoEmpleado->insertEmpleado(
             $strNombre,          // nombre_completo
             $id_tipo_doc,        // tipo_doc_id
@@ -46,23 +66,31 @@ if ($option == "registro") {
             $id_ciudad,          // ciudad_id
             true
          );
+         // Verificamos si el empleado fue insertado correctamente
          if ($arrEmpleado->id > 0) {
-            var_dump($arrEmpleado);
+            // Si el empleado fue insertado, enviamos una respuesta de éxito
             $arrResponse = array('status' => true, 'msg' => 'Registro guardado con éxito');
          } else {
-            var_dump($arrEmpleado);
+            // Si el empleado no fue insertado, enviamos una respuesta de error
             $arrResponse = array('status' => false, 'msg' => 'Error: registro no guardado');
          }
       }
+      // Convertimos el arreglo de respuesta a JSON y lo imprimimos
       echo json_encode($arrResponse);
    }
+   // Finalizamos el script para evitar ejecución adicional
    die();
 }
+// Verificamos si la opción es "actualizar"
 if ($option == "actualizar") {
+   // Verificamos si se está enviando un formulario
    if($_POST){
+      // Verificamos si todos los campos obligatorios están completos
       if (empty($_POST['txtNombreCompleto']) || empty($_POST['txtnumdoc']) || empty($_POST['txtDireccion']) || empty($_POST['txtTelefono']) || empty($_POST['txtEmail']) || empty($_POST['listCiudad'])) {
+         // Si algún campo está vacío, enviamos una respuesta de error
          $arrResponse = array('status' => false, 'msg' => 'Error: datos incompletos');
       } else {
+         // Procesamos los datos del formulario
          $intId= intval($_POST['txtId']);
          $strNombre = ucwords(trim($_POST['txtNombreCompleto']));
          $strNumDoc = trim($_POST['txtnumdoc']);
@@ -72,6 +100,7 @@ if ($option == "actualizar") {
          $id_ciudad = intval($_POST['listCiudad']);
          $id_estado_civil = intval($_POST['listEstadoCivil']);
          $id_tipo_doc = intval($_POST['listTipoDoc']);
+         // Intentamos actualizar el empleado
          $arrEmpleado = $objetoEmpleado->updateEmpleado(
             $intId,
             $strNombre,          // nombre_completo
@@ -84,23 +113,33 @@ if ($option == "actualizar") {
             $id_ciudad,          // ciudad_id
             true
          );
+         // Verificamos si el empleado fue actualizado correctamente
          if (is_object($arrEmpleado)) {
+            // Si el empleado fue actualizado, enviamos una respuesta de éxito
             $arrResponse = array('status' => true, 'msg' => 'Registro guardado con éxito');
          } else {
+            // Si el empleado no fue actualizado, enviamos una respuesta de error
             $arrResponse = array('status' => false, 'msg' => 'Error: registro no guardado');
          }
       }
+      // Convertimos el arreglo de respuesta a JSON y lo imprimimos
       echo json_encode($arrResponse);
    }
 }
+// Verificamos si la opción es "verregistro"
 if ($option == "verregistro") {
+   // Verificamos si se está enviando un formulario
    if ($_POST) {
+      // Obtenemos el ID del empleado a ver
       $id_empleados = intval($_POST['id_empleados']);
+      // Intentamos obtener el empleado
       $arrEmpleado = $objetoEmpleado->getEmpleado($id_empleados);
+      // Verificamos si el empleado fue encontrado
       if (empty($arrEmpleado)) {
+         // Si el empleado no fue encontrado, enviamos una respuesta de error
          $arrResponse = array('status' => false, 'msg' => 'Datos no encontrados');
       } else {
-         // Modificamos la respuesta para incluir los IDs necesarios
+         // Si el empleado fue encontrado, preparamos la respuesta con los datos del empleado
          $arrResponse = array(
             'status' => true, 
             'msg' => 'datos encontrados', 
@@ -117,8 +156,10 @@ if ($option == "verregistro") {
             )
          );
       }
+      // Convertimos el arreglo de respuesta a JSON y lo imprimimos
       echo json_encode($arrResponse);
    }
+   // Finalizamos el script para evitar ejecución adicional
    die();
 }
 

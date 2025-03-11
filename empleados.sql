@@ -3,30 +3,13 @@ CREATE DATABASE empleados;
 -- Usar base de datos 
 USE empleados;
 
--- Realización de las tablas de la DB
--- Tabla paises 
-CREATE TABLE paises(
- `id_pais` bigint(20) NOT NULL auto_increment primary key,
- `nombre` VARCHAR(100) NOT NULL
-)engine=InnoDB;
 
--- Tabla de estados(departamentos, provincias, etc)
-CREATE TABLE estados(
-`id_estado` bigint(20) NOT NULL auto_increment primary key,
-`nombre` VARCHAR(100) NOT NULL,
-`pais_id` bigint(20) NOT NULL
-)engine=InnoDB;
-
-ALTER TABLE estados ADD CONSTRAINT `ESTADO_PAIS_FK` FOREIGN KEY(`pais_id`) REFERENCES paises(`id_pais`) ON DELETE CASCADE ON UPDATE cascade;
 
 -- Tabla de ciudades 
 CREATE TABLE ciudades(
 `id_ciudad` bigint(20) NOT NULL auto_increment primary key,
 `nombre` VARCHAR(100) NOT NULL,
-`estado_id` bigint(20) NOT NULL
 )engine=InnoDB;
-
-ALTER TABLE ciudades ADD CONSTRAINT `CIUDAD_ESTADO_FK` FOREIGN KEY(`estado_id`) REFERENCES estados(`id_estado`) ON DELETE CASCADE ON UPDATE cascade;
 -- tabla de tipo de documento 
 CREATE TABLE tipo_ducumento(
 `id_tipo_doc` bigint(20) NOT NULL auto_increment primary key,
@@ -58,9 +41,7 @@ ALTER TABLE empleados ADD CONSTRAINT `EMPLEADO_CIUDAD_FK` FOREIGN KEY(`ciudad_id
 -- Insertar datos en las tablas
 INSERT INTO tipo_ducumento (nombre) VALUES ('DNI'), ('Carnet de residencia'), ('Pasaporte'), ('Cédula de ciudadanía'), ('Documento de identidad');
 INSERT INTO estado_civil (nombre) VALUES ('Soltero'), ('Casado'), ('Divorciado'), ('Viudo'), ('Union libre');
-INSERT INTO paises (nombre) VALUES ('Perú'), ('Chile'), ('Brasil'), ('Argentina'), ('Uruguay'), ('Paraguay'), ('Bolivia'), ('Ecuador'), ('Colombia'), ('Venezuela'), ('Guyana'), ('Surinam'), ('Guayana Francesa'), ('Brasil'), ('Argentina');
-INSERT INTO estados (nombre, pais_id) VALUES ('Lima', 1), ('Santiago', 2), ('Rio de Janeiro', 3), ('Buenos Aires', 4), ('Montevideo', 5), ('Asunción', 6), ('La Paz', 7), ('Quito', 8), ('Bogotá', 9), ('Caracas', 10), ('Georgetown', 11), ('Paramaribo', 12), ('Cayena', 13), ('Brasília', 14);
-INSERT INTO ciudades (nombre, estado_id) VALUES ('Lima', 1), ('Santiago', 2), ('Rio de Janeiro', 3), ('Buenos Aires', 4), ('Montevideo', 5), ('Asunción', 6), ('La Paz', 7), ('Quito', 8), ('Bogotá', 9), ('Caracas', 10), ('Georgetown', 11), ('Paramaribo', 12), ('Cayena', 13), ('Brasília', 14);
+INSERT INTO ciudades (nombre) VALUES ('Lima'), ('Santiago'), ('Rio de Janeiro'), ('Buenos Aires'), ('Montevideo'), ('Asunción'), ('La Paz'), ('Quito'), ('Bogotá'), ('Caracas'), ('Georgetown'), ('Paramaribo'), ('Cayena'), ('Brasília');
 
 -- Insertar datos en la tabla de empleados
 INSERT INTO empleados (nombre_completo, tipo_doc_id, numero_documento, estado_civil_id, email, telefono, direccion, ciudad_id) VALUES ('Juan Perez', 1, 1234567890, 1, 'juanperez@gmail.com', '9876543210', 'Av. Siempre Viva 123', 1);
@@ -69,62 +50,6 @@ INSERT INTO empleados (nombre_completo, tipo_doc_id, numero_documento, estado_ci
 // ... existing code ...
 
 /* =================== PROCEDIMIENTOS ALMACENADOS =================== */
-
-/* --------- Procedimientos para PAISES --------- */
-DELIMITER $
-/* Este procedimiento selecciona todos los países de la base de datos. */
-CREATE PROCEDURE select_paises()
-BEGIN
-    SELECT * FROM paises WHERE id_pais > 0;
-END; $
-DELIMITER ;
-
-DELIMITER $
-/* Este procedimiento inserta un nuevo país en la base de datos si no existe ya. */
-CREATE PROCEDURE insert_pais(IN nombre_pais VARCHAR(100))
-BEGIN
-    DECLARE existe INT;
-    DECLARE id INT;
-    SET existe = (SELECT COUNT(*) FROM paises WHERE nombre = nombre_pais);
-    IF existe = 0 THEN
-        INSERT INTO paises(nombre) VALUES (nombre_pais);
-        SET id = LAST_INSERT_ID();
-    ELSE
-        SET id = 0;
-    END IF;
-    SELECT id;
-END; $
-DELIMITER ;
-
-DELIMITER $
-/* Este procedimiento actualiza el nombre de un país existente en la base de datos. */
-CREATE PROCEDURE update_pais(IN id BIGINT, IN nombre_pais VARCHAR(100))
-BEGIN
-    DECLARE existe INT;
-    SET existe = (SELECT COUNT(*) FROM paises WHERE id_pais = id);
-    IF existe > 0 THEN
-        UPDATE paises SET nombre = nombre_pais WHERE id_pais = id;
-        SELECT id;
-    ELSE
-        SELECT 0;
-    END IF;
-END; $
-DELIMITER ;
-
-DELIMITER $
-/* Este procedimiento elimina un país de la base de datos si existe. */
-CREATE PROCEDURE delete_pais(IN id BIGINT)
-BEGIN
-    DECLARE existe INT;
-    SET existe = (SELECT COUNT(*) FROM paises WHERE id_pais = id);
-    IF existe > 0 THEN
-        DELETE FROM paises WHERE id_pais = id;
-        SELECT 1;
-    ELSE
-        SELECT 0;
-    END IF;
-END; $
-DELIMITER ;
 
 /* --------- Procedimientos para EMPLEADOS --------- */
 DELIMITER $
@@ -276,16 +201,3 @@ DELIMITER ;
 
 DELIMITER $
 /* Este procedimiento inserta una nueva ciudad en la base de datos si no existe ya una ciudad con el mismo nombre. */
-
-
-/* Ejemplos de uso:
-CALL select_paises();
-CALL insert_pais('Colombia');
-CALL update_pais(1, 'México');
-CALL delete_pais(5);
-
-CALL select_empleados();
-CALL insert_empleado('María García', 1, 987654321, 1, 'maria@email.com', '123456789', 'Calle Principal 123', 1);
-CALL update_empleado(1, 'María López', 1, 987654321, 2, 'maria@email.com', '123456789', 'Calle Nueva 456', 1);
-CALL delete_empleado(1);
-*/
